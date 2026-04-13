@@ -4,7 +4,8 @@ Pydantic Settings loaded from environment variables.
 """
 
 from pydantic_settings import BaseSettings
-from typing import Literal
+from pydantic import field_validator
+from typing import Literal, Any
 
 
 class Settings(BaseSettings):
@@ -24,14 +25,23 @@ class Settings(BaseSettings):
     # ── Roboflow (when MODEL_SOURCE = "roboflow") ────────────
     ROBOFLOW_API_KEY: str = ""
     ROBOFLOW_MODEL_ID: str = "pothole-detection-gv5e7/3"
-    ROBOFLOW_CONFIDENCE: int = 40  # Roboflow uses 0-100 scale
+    # Roboflow hosted API expects 0–1. Values >1 are treated as legacy 0–100 (e.g. 55 → 0.55).
+    ROBOFLOW_CONFIDENCE: float = 0.55
+
+    @field_validator("ROBOFLOW_CONFIDENCE", mode="before")
+    @classmethod
+    def normalize_roboflow_confidence(cls, v: Any) -> float:
+        if v is None or v == "":
+            return 0.55
+        x = float(v)
+        return x / 100.0 if x > 1.0 else x
 
     # ── Local Model (when MODEL_SOURCE = "local") ────────────
     LOCAL_MODEL_PATH: str = "models/yolov12s_rdd2022.pt"
 
     # ── YOLO Inference ────────────────────────────────────────
-    YOLO_CONFIDENCE: float = 0.65
-    YOLO_IOU: float = 0.50
+    YOLO_CONFIDENCE: float = 0.55   # lowered from 0.65: preprocessing improves SNR
+    YOLO_IOU: float = 0.45          # tighter NMS to deduplicate overlapping boxes
 
     # ── SSIM Verification ─────────────────────────────────────
     SSIM_PASS_THRESHOLD: float = 0.75  # score < this = surface changed = PASS

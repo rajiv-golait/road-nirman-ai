@@ -19,8 +19,9 @@ COPY . .
 # Create models directory (used if loading local .pt files later)
 RUN mkdir -p models
 
-# Expose FastAPI port
+# Render / Railway / local: platform sets PORT at runtime
 EXPOSE 8000
+ENV PORT=8000
 
-# Start server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so ${PORT} expands (Render assigns PORT automatically)
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT}

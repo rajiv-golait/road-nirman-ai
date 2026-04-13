@@ -4,8 +4,17 @@ Stateless internal microservice. Called only by Supabase Edge Functions.
 Never writes to DB. Returns evidence; Edge Functions own all state transitions.
 """
 
+import logging
 import time
 from contextlib import asynccontextmanager
+
+_ssr_log = logging.getLogger("ssr")
+_ssr_log.setLevel(logging.INFO)
+if not _ssr_log.handlers:
+    _h = logging.StreamHandler()
+    _h.setFormatter(logging.Formatter("%(levelname)s [%(name)s] %(message)s"))
+    _ssr_log.addHandler(_h)
+    _ssr_log.propagate = False
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,14 +38,14 @@ async def lifespan(app: FastAPI):
     from services.yolo_service import detection_service
     detection_service.load_model()
 
-    print(f"✅ SSR AI Service v{settings.SERVICE_VERSION} started")
+    print(f"SSR AI Service v{settings.SERVICE_VERSION} started")
     print(f"   Model source: {settings.MODEL_SOURCE}")
     print(f"   Model loaded: {detection_service.model_loaded}")
     print(f"   AI source:    {detection_service.ai_source}")
 
     yield
 
-    print("🛑 SSR AI Service shutting down")
+    print("SSR AI Service shutting down")
 
 
 # ── FastAPI App ───────────────────────────────────────────────

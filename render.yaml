@@ -1,0 +1,24 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# After connect: set secret env vars in the Render dashboard (never commit .env).
+
+services:
+  - type: web
+    name: road-nirman-ai
+    env: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # PORT is injected by Render for Docker web services — do not set manually.
+      - key: AI_SERVICE_SECRET
+        sync: false
+      - key: MODEL_SOURCE
+        value: roboflow
+      - key: ROBOFLOW_API_KEY
+        sync: false
+      - key: ROBOFLOW_MODEL_ID
+        value: pothole-detection-gv5e7/3
+      - key: ROBOFLOW_CONFIDENCE
+        value: "0.55"
